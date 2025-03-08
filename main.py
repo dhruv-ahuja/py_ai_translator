@@ -1,13 +1,20 @@
 import asyncio
+import time
+
 import logfire
-import os
 
 from ai import create_agent, generate_language_prompt
 from crawler import crawl_url
+from config import settings
 
 
-logfire.configure(token=os.environ["LOGFIRE_TOKEN"])
-logfire.instrument_openai()
+if settings.logfire.enable:
+    logfire.configure(token=settings.logfire.token.get_secret_value())
+    logfire.instrument_openai()
+
+    # sleep to avoid interrupting user input when logfire emits startup log
+    print("enabled Logfire telemetry")
+    time.sleep(1)
 
 
 async def sample_conversion():

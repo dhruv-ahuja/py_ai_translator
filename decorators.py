@@ -5,7 +5,6 @@ def singleton(cls):
     @functools.wraps(cls)
     def init_singleton(*args, **kwargs):
         instance = init_singleton.__instance
-        print(instance, cls)
 
         if instance is None:
             init_singleton.__instance = cls(*args, **kwargs)

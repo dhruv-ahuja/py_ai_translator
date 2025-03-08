@@ -1,7 +1,8 @@
 from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.openai import OpenAIProvider
-import os
+
+from config import settings
 
 
 def generate_language_prompt(language: str = "Spanish", content: str = ""):
@@ -43,7 +44,9 @@ def create_agent(
 ) -> Agent:
     model = OpenAIModel(
         model_name=model_name,
-        provider=OpenAIProvider(base_url="https://openrouter.ai/api/v1", api_key=os.environ["OPENROUTER_API_KEY"]),
+        provider=OpenAIProvider(
+            base_url=settings.open_router.base_url, api_key=settings.open_router.api_key.get_secret_value()
+        ),
     )
     agent = Agent(model, instrument=instrument, system_prompt=system_prompt)
 
