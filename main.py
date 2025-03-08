@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 import time
 
 import logfire
@@ -20,7 +21,7 @@ if settings.logfire.enable:
 async def sample_conversion():
     url = input("Enter URL to crawl: ").strip()
     name = input("Enter name for output file: ").strip()
-    cache = input("Enable cache? (y/n): ").strip().lower()
+    cache = input("Enable cache? (Y/n): ").strip().lower()
     if cache == "" or cache == "y":
         cache = True
     else:
@@ -48,8 +49,13 @@ async def sample_conversion():
 
     print(translation_result)
 
-    with open(f"{name}.md", "w") as f:
+    output_folder = Path(settings.general.output_folder)
+    output_folder.mkdir(parents=True, exist_ok=True)
+    output_file_path = output_folder.joinpath(f"{name}.md")
+
+    with open(output_file_path, "w") as f:
         data = translation_result.data
+        # remove markdown codeblock marker
         data = data.replace("```markdown", "").replace("```", "")
         f.write(data)
 
