@@ -18,6 +18,8 @@ Translate headings into {language} and maintain the original English headings be
 
 - Ensure each pair of paragraphs is separated by a blank line for readability.
 - Maintain consistency in formatting across both languages, especially for lists, code blocks, and quotes.
+- Remove any website navigation content like headers, footers, sidebar, etc.
+- Ensure that you retain code blocks.
 
 Example Output Format:
 <{language} translation of the first paragraph.>
