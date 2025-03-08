@@ -1,5 +1,7 @@
 from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
+from pydantic_ai.providers.openai import OpenAIProvider
+import os
 
 
 def generate_language_prompt(language: str = "Spanish", content: str = ""):
@@ -39,10 +41,10 @@ def create_agent(
     instrument: bool = True,
     system_prompt: str = generate_language_prompt(),
 ) -> Agent:
-    model_name = "google/gemini-flash-1.5-8b"
-    # model_name = "deepseek/deepseek-r1"
-    # model_name = "nousresearch/hermes-3-llama-3.1-70b"
-    model = OpenAIModel(model_name=model_name)
+    model = OpenAIModel(
+        model_name=model_name,
+        provider=OpenAIProvider(base_url="https://openrouter.ai/api/v1", api_key=os.environ["OPENROUTER_API_KEY"]),
+    )
     agent = Agent(model, instrument=instrument, system_prompt=system_prompt)
 
     return agent

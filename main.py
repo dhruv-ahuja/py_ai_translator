@@ -11,10 +11,15 @@ logfire.instrument_openai()
 
 
 async def sample_conversion():
-    url, name = "https://www.sparknotes.com/lit/montecristo/full-text/chapter-1/", "montecristo_1"
-    # url, name = "https://firecrawl.dev", "fc"
+    url = input("Enter URL to crawl: ").strip()
+    name = input("Enter name for output file: ").strip()
+    cache = input("Enable cache? (y/n): ").strip().lower()
+    if cache == "" or cache == "y":
+        cache = True
+    else:
+        cache = False
 
-    result = await crawl_url(url)
+    result = await crawl_url(url, cache)
     content = result.markdown
 
     if not content:
