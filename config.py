@@ -49,7 +49,7 @@ class GeneralSettings(BaseSettings):
 class Settings(BaseSettings):
     logfire: LogfireSettings = LogfireSettings()
     open_router: OpenRouterSettings = OpenRouterSettings()
-    general: GeneralSettings = Field(default_factory=GeneralSettings)
+    general: GeneralSettings = GeneralSettings()
 
 
 settings = Settings()
