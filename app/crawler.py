@@ -33,9 +33,7 @@ async def crawl_url(url: str, cache: bool = True) -> CrawlResult:
         if not cache:
             config.cache_mode = CacheMode.DISABLED
         result: CrawlResult = await crawler.arun(url=url, config=config, browser_config=browser_config)
-        if result.success:
-            print(result.markdown.fit_markdown)
-        else:
+        if not result.success:
             print(result.error_message)
 
         return result
