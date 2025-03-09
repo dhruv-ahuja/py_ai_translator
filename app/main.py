@@ -15,7 +15,7 @@ if settings.logfire.enable:
     logfire.instrument_openai()
 
     # sleep to avoid interrupting user input when logfire emits startup log
-    logger.debug("enabled Logfire telemetry", test=123, ok="yea")
+    logger.debug("enabled Logfire telemetry")
     time.sleep(2)
 
 
@@ -46,7 +46,7 @@ async def sample_conversion():
         name = name if name else sanitized_url
 
     content = content.fit_markdown if content.fit_markdown else content
-    logger.debug("Extracted markdown content from URL\n", url=url, content=content)
+    logger.debug("Extracted markdown content from URL\n", url=url, content=str(content))
 
     prompt = generate_language_prompt("Spanish", content)
     agent = create_agent(system_prompt=prompt)
