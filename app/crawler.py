@@ -7,6 +7,8 @@ from crawl4ai import (
     CacheMode,
     BrowserConfig,
 )
+from app.config.logger import logger
+
 
 browser_config = BrowserConfig(
     headless=True,  # 'True' for automated runs
@@ -28,12 +30,13 @@ config = CrawlerRunConfig(
 )
 
 
-async def crawl_url(url: str, cache: bool = True) -> CrawlResult:
+async def crawl_url(url: str, cache: bool = True) -> CrawlResult | None:
     async with AsyncWebCrawler() as crawler:
         if not cache:
             config.cache_mode = CacheMode.DISABLED
         result: CrawlResult = await crawler.arun(url=url, config=config, browser_config=browser_config)
         if not result.success:
-            print(result.error_message)
+            logger.error("error crawling URL", url=url, error=result.error_message)
+            return None
 
         return result

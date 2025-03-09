@@ -3,6 +3,7 @@ import time
 from pathlib import Path
 
 import logfire
+from app.config.logger import logger
 
 from app.ai import create_agent, generate_language_prompt
 from app.crawler import crawl_url
@@ -14,7 +15,7 @@ if settings.logfire.enable:
     logfire.instrument_openai()
 
     # sleep to avoid interrupting user input when logfire emits startup log
-    print("enabled Logfire telemetry")
+    logger.debug("enabled Logfire telemetry", test=123, ok="yea")
     time.sleep(2)
 
 
@@ -31,7 +32,7 @@ async def sample_conversion():
     content = result.markdown
 
     if not content:
-        print("error crawling page, exiting")
+        logger.error("No content found for URL, exiting...", url=url)
         return
 
     # TODO: clean up this logic as much as possible
@@ -45,7 +46,7 @@ async def sample_conversion():
         name = name if name else sanitized_url
 
     content = content.fit_markdown if content.fit_markdown else content
-    print("content:", content, "\n\n")
+    logger.debug("Extracted markdown content from URL\n", url=url, content=content)
 
     prompt = generate_language_prompt("Spanish", content)
     agent = create_agent(system_prompt=prompt)
@@ -56,7 +57,7 @@ async def sample_conversion():
     {content}
     """
     translation_result = await agent.run(user_prompt)
-    print("Agent usage stats:", translation_result.usage())
+    logger.debug("Usage stats for agent", usage=translation_result.usage())
 
     output_folder = Path(settings.general.output_folder)
     output_folder.mkdir(parents=True, exist_ok=True)
@@ -68,8 +69,8 @@ async def sample_conversion():
         data = data.replace("```markdown", "").replace("```", "")
         f.write(data)
 
-    print("page metadata", result.metadata)
-    print(f"File saved successfully at: {output_file_path}")
+    logger.debug("Crawled URL metadata", url=url, metadata=result.metadata)
+    logger.info("Translated content saved successfully", output_file_path=output_file_path)
 
 
 if __name__ == "__main__":

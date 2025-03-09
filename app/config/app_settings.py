@@ -6,6 +6,19 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from app.decorators import singleton
 
 
+class LoggerSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="LOGGER_")
+
+    # using sane defaults, refer: https://betterstack.com/community/guides/logging/loguru/
+    # & https://loguru.readthedocs.io/en/stable/api/logger.html#record
+    level: str = Field("INFO")
+    format: str = Field(
+        "<level>{time:DD-MM-YYYY HH:mm:ss} | {level} | {name}:{function}:{line} | {message} | ctx: {extra}</level>"
+    )
+    colorize: bool = Field(True)
+    enqueue: bool = Field(True)
+
+
 class LogfireSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="LOGFIRE_")
 
@@ -47,9 +60,10 @@ class GeneralSettings(BaseSettings):
 
 @singleton
 class Settings(BaseSettings):
+    logger: LoggerSettings = LoggerSettings()
+    general: GeneralSettings = GeneralSettings()
     logfire: LogfireSettings = LogfireSettings()
     open_router: OpenRouterSettings = OpenRouterSettings()
-    general: GeneralSettings = GeneralSettings()
 
 
 settings = Settings()
