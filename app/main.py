@@ -6,7 +6,7 @@ import logfire
 
 from app.ai import create_agent, generate_language_prompt
 from app.crawler import crawl_url
-from app.config import settings
+from app.config.app_settings import settings
 
 
 if settings.logfire.enable:
