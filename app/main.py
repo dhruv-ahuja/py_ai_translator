@@ -1,11 +1,12 @@
 import asyncio
+import json
 import time
 from pathlib import Path
 
 import logfire
-from app.config.logger import logger
 
 from app.ai import create_agent, generate_language_prompt
+from app.config.logger import logger
 from app.crawler import crawl_url
 from app.config.app_settings import settings
 
@@ -47,6 +48,7 @@ async def sample_conversion():
 
     content = content.fit_markdown if content.fit_markdown else content
     logger.debug("Extracted markdown content from URL\n", url=url, content=str(content))
+    logger.debug("Crawled URL metadata", url=url, metadata=result.metadata)
 
     prompt = generate_language_prompt("Spanish", content)
     agent = create_agent(system_prompt=prompt)
@@ -63,13 +65,19 @@ async def sample_conversion():
     output_folder.mkdir(parents=True, exist_ok=True)
     output_file_path = output_folder.joinpath(f"{name}.md")
 
+    logger.debug("Saving translated content to file", output_file_path=output_file_path)
     with open(output_file_path, "w") as f:
         data = translation_result.data
+
         # remove markdown codeblock marker
         data = data.replace("```markdown", "").replace("```", "")
         f.write(data)
 
-    logger.debug("Crawled URL metadata", url=url, metadata=result.metadata)
+        f.write("\n--------------------------------------\n")
+        f.write("### TRANSLATED PAGE WEB METADTA\n\n")
+        f.write(json.dumps(result.metadata))
+        f.write("\n--------------------------------------\n")
+
     logger.info("Translated content saved successfully", output_file_path=output_file_path)
 
 
