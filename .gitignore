@@ -13,4 +13,4 @@ wheels/
 .env
 
 # Markdown
-*.md
+markdown/

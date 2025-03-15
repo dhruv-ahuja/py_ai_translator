@@ -19,6 +19,33 @@ class LoggerSettings(BaseSettings):
     enqueue: bool = Field(True)
 
 
+class DbSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="DB_")
+
+    host: str = Field(...)
+    port: int = Field(...)
+    name: str = Field(...)
+    user: str = Field(...)
+    password: SecretStr = Field(...)
+    type_: str = Field("postgresql", alias="type")
+
+    @property
+    def async_url(self) -> str:
+        if self.type_ != "postgresql":
+            raise ValueError("Unsupported database type")
+        return (
+            f"{self.type_}+asyncpg://{self.user}:{self.password.get_secret_value()}@{self.host}:{self.port}/{self.name}"
+        )
+
+    @property
+    def url(self) -> str:
+        if self.type_ != "postgresql":
+            raise ValueError("Unsupported database type")
+        return (
+            f"{self.type_}+psycopg://{self.user}:{self.password.get_secret_value()}@{self.host}:{self.port}/{self.name}"
+        )
+
+
 class LogfireSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="LOGFIRE_")
 
@@ -61,6 +88,7 @@ class GeneralSettings(BaseSettings):
 @singleton
 class Settings(BaseSettings):
     logger: LoggerSettings = LoggerSettings()
+    db: DbSettings = DbSettings()
     general: GeneralSettings = GeneralSettings()
     logfire: LogfireSettings = LogfireSettings()
     open_router: OpenRouterSettings = OpenRouterSettings()
