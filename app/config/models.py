@@ -1,6 +1,6 @@
 import datetime as dt
 
-from sqlalchemy import Column, Integer, String, DateTime, func
+from sqlalchemy import Integer, String, DateTime, func
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import DeclarativeBase

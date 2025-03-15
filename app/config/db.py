@@ -16,7 +16,7 @@ async_engine = create_async_engine(
     pool_recycle=1800,
     echo=False,
     pool_pre_ping=True,
-    connect_args={"options": "-c timezone=utc"},
+    connect_args={"server_settings": {"timezone": "UTC"}},
 )
 AsyncSessionLocal = sessionmaker(
     bind=async_engine,
@@ -46,4 +46,5 @@ async def get_async_session(auto_commit: bool = True) -> Generator[AsyncSession,
 async def test_db_connection():
     async with get_async_session() as session:
         result: CursorResult = await session.execute(text("SELECT 1"))
+
         return result
