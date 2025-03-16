@@ -3,7 +3,7 @@ from pathlib import Path
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from app.config.decorators import singleton
+from app.utils.decorators import singleton
 
 
 class LoggerSettings(BaseSettings):

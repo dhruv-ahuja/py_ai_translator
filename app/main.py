@@ -5,9 +5,9 @@ from pathlib import Path
 
 import logfire
 
-from app.services.ai import create_agent, generate_language_prompt
+from app.utils.ai import create_agent, generate_language_prompt
 from app.config.logger import logger
-from app.services.crawler import crawl_url
+from app.utils.crawler import crawl_url
 from app.config.app_settings import settings
 
 
