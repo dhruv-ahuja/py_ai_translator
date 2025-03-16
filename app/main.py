@@ -5,9 +5,9 @@ from pathlib import Path
 
 import logfire
 
-from app.ai import create_agent, generate_language_prompt
+from app.services.ai import create_agent, generate_language_prompt
 from app.config.logger import logger
-from app.crawler import crawl_url
+from app.services.crawler import crawl_url
 from app.config.app_settings import settings
 
 
@@ -79,6 +79,9 @@ async def sample_conversion():
         f.write("\n--------------------------------------\n")
 
     logger.info("Translated content saved successfully", output_file_path=output_file_path)
+
+
+# TODO: export as RSS feed
 
 
 if __name__ == "__main__":
