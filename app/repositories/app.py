@@ -1,5 +1,6 @@
-from typing import Generic, TypeAlias, TypeVar, Type
+from typing import ClassVar, TypeVar, Generic
 
+from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import DeclarativeBase
@@ -14,13 +15,19 @@ CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
 # alias for ease of use
-S: TypeAlias = AsyncSession
+S = AsyncSession
 
 
 # refer: https://claude.ai/chat/017477b2-0a93-4548-9a05-e20b68dcb68c to learn about an ideal repository pattern implementation
-class AppRepository(ModelType, CreateSchemaType, UpdateSchemaType):
-    def __init__(self, model: Type[ModelType]) -> None:
-        self.model = model
+class AppRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
+    model: ClassVar[ModelType]
+
+    def __init__(self):
+        # this runtime check ensures no one can instantiate the abstract class
+        if not issubclass(self.model, ModelType.__bound__):
+            raise ValueError(
+                f"{self.__class__.__name__}'s `model` attribute must be a subclass of {ModelType.__name__}, got {type(self.model)}"
+            )
 
     async def get(self, id: int, session: S) -> ModelType | None:
         return await session.get(self.model, id)
@@ -35,23 +42,32 @@ class AppRepository(ModelType, CreateSchemaType, UpdateSchemaType):
         result = await session.execute(query)
         return result.scalars().all()
 
-    async def add(self, obj_in: CreateSchemaType, session: S) -> ModelType:
-        db_record = self.model(**obj_in.model_dump(exclude_unset=True))
-        await session.add(db_record)
+    async def add(self, data: CreateSchemaType, session: S) -> ModelType:
+        db_record = self.model(**data.model_dump(exclude_unset=True))
+        if hasattr(data, "metadata"):
+            metadata_column = db_record.metadata_column
+            setattr(db_record, metadata_column, data.metadata)
+        logger.debug("created model object", model=db_record, class_name=self.__class__.__name__)
+
+        session.add(db_record)
         await session.flush()
         await session.refresh(db_record)
         return db_record
 
-    async def update(self, id: int, update_schema: UpdateSchemaType, session: S) -> ModelType | None:
+    async def update(self, id: int, data: UpdateSchemaType, session: S) -> ModelType | None:
         db_record = await self.get(id, session)
         if db_record is None:
             return None
 
-        update_data = update_schema.model_dump(exclude_unset=True)
+        update_data = data.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(db_record, field, value)
 
-        await session.add(db_record)
+        if hasattr(data, "metadata"):
+            metadata_column = db_record.metadata_column
+            setattr(db_record, metadata_column, data.metadata)
+
+        session.add(db_record)
         await session.flush()
         await session.refresh(db_record)
         return db_record
@@ -87,14 +103,10 @@ class AppRepository(ModelType, CreateSchemaType, UpdateSchemaType):
 
 
 class CrawlerDataRepository(AppRepository[CrawlerData, CrawlerDataCreate, CrawlerDataUpdate]):
-    pass
-    # def __init__(self) -> None:
-    #     super().__init__(CrawlerData)
+    model = CrawlerData
 
 
 class AiTranslationOutputRepository(
     AppRepository[AiTranslationOutput, AiTranslationOutputCreate, AiTranslationOutputUpdate]
 ):
-    pass
-    # def __init__(self) -> None:
-    #     super().__init__(AiTranslationOutput)
+    model = AiTranslationOutput

@@ -31,8 +31,12 @@ class CrawlerData(Base):
     )
 
     def __repr__(self) -> str:
-        content = self.content[:100] + "..." if isinstance(self.content, str) else self.content
+        content = self.content[:50] + "..." if isinstance(self.content, str) else self.content
         return f"CrawlerData(id={self.id}, url={self.url}, markdown={content}, metadata={self.crawler_metadata}, created_date={self.created_date}, updated_date={self.updated_date})"
+
+    @property
+    def metadata_column(self) -> str:
+        return "crawler_metadata"
 
 
 class AiTranslationOutput(Base):
@@ -54,5 +58,9 @@ class AiTranslationOutput(Base):
     crawler_data: Mapped["CrawlerData"] = relationship("CrawlerData", back_populates="translation_output")
 
     def __repr__(self) -> str:
-        content = self.content[:100] + "..." if isinstance(self.content, str) else self.content
+        content = self.content[:50] + "..." if isinstance(self.content, str) else self.content
         return f"AiTranslationOutput(id={self.id}, crawler_data_id={self.crawler_data_id}, markdown={content}, metadata={self.ai_metadata}, created_date={self.created_date}, updated_date={self.updated_date})"
+
+    @property
+    def metadata_column(self) -> str:
+        return "ai_metadata"
