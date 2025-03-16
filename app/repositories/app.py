@@ -4,18 +4,21 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import DeclarativeBase
 
-# from app.config.models import CrawlerData, AiTranslationOutput
+from app.config.models import CrawlerData, AiTranslationOutput
 from app.config.db import AsyncSession
+from app.schemas.app import CrawlerDataCreate, CrawlerDataUpdate, AiTranslationOutputCreate, AiTranslationOutputUpdate
 
 
 ModelType = TypeVar("ModelType", bound=DeclarativeBase)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
+
+# alias for ease of use
 S: TypeAlias = AsyncSession
 
 
 # refer: https://claude.ai/chat/017477b2-0a93-4548-9a05-e20b68dcb68c to learn about an ideal repository pattern implementation
-class AppRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
+class AppRepository(ModelType, CreateSchemaType, UpdateSchemaType):
     def __init__(self, model: Type[ModelType]) -> None:
         self.model = model
 
@@ -33,7 +36,7 @@ class AppRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return result.scalars().all()
 
     async def add(self, obj_in: CreateSchemaType, session: S) -> ModelType:
-        db_record = self.model(**obj_in.model_dump(exclude_none=True))
+        db_record = self.model(**obj_in.model_dump(exclude_unset=True))
         await session.add(db_record)
         await session.flush()
         await session.refresh(db_record)
@@ -44,9 +47,9 @@ class AppRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         if db_record is None:
             return None
 
-        for name, field_info in update_schema.model_fields.items():
-            value = getattr(update_schema, name, None)
-            setattr(db_record, name, value)
+        update_data = update_schema.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(db_record, field, value)
 
         await session.add(db_record)
         await session.flush()
@@ -81,3 +84,17 @@ class AppRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     async def exists_by_filter(self, session: S, **filters) -> bool:
         return await self.get_by_filter(session, **filters) is not None
+
+
+class CrawlerDataRepository(AppRepository[CrawlerData, CrawlerDataCreate, CrawlerDataUpdate]):
+    pass
+    # def __init__(self) -> None:
+    #     super().__init__(CrawlerData)
+
+
+class AiTranslationOutputRepository(
+    AppRepository[AiTranslationOutput, AiTranslationOutputCreate, AiTranslationOutputUpdate]
+):
+    pass
+    # def __init__(self) -> None:
+    #     super().__init__(AiTranslationOutput)
