@@ -1,4 +1,5 @@
 import datetime as dt
+from typing import override, Any
 
 from sqlalchemy import Integer, String, DateTime, func
 from sqlalchemy.orm import Mapped
@@ -16,9 +17,9 @@ class CrawlerData(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     url: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    content: Mapped[str] = mapped_column(String, nullable=False)
+    content: Mapped[str | None] = mapped_column(String, nullable=False, default="")
     # attribute name 'metadata' is reserved by sqlalchemy
-    crawler_metadata: Mapped[dict] = mapped_column(JSONB, name="metadata", nullable=True)
+    crawler_metadata: Mapped[dict | None] = mapped_column(JSONB, name="metadata", nullable=True)
     created_date: Mapped[dt.datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -27,7 +28,5 @@ class CrawlerData(Base):
     )
 
     def __repr__(self) -> str:
-        return f"CrawlerData(id={self.id}, url={self.url}, markdown={self.content[:100] + '...'}, metadata={self.crawler_metadata}, created_date={self.created_date}, updated_date={self.updated_date})"
-
-
-# TODO: add translation and translation_history models
+        content = self.content[:100] + "..." if isinstance(self.content, str) else self.content
+        return f"CrawlerData(id={self.id}, url={self.url}, markdown={content}, metadata={self.crawler_metadata}, created_date={self.created_date}, updated_date={self.updated_date})"
