@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 
-class CrawlerDataCreate(BaseModel):
+class CrawledDataCreate(BaseModel):
     url: str
     content: str = Field("")
     metadata: dict | None = Field(None)
@@ -24,7 +24,7 @@ class CrawlerDataCreate(BaseModel):
         return title
 
 
-class CrawlerDataUpdate(BaseModel):
+class CrawledDataUpdate(BaseModel):
     id: int
     url: str | None
     content: str = Field("")
@@ -32,7 +32,7 @@ class CrawlerDataUpdate(BaseModel):
 
 
 class AiTranslationOutputCreate(BaseModel):
-    crawler_data_id: int
+    crawled_data_id: int
     language: str
     content: str = Field("")
     metadata: dict | None = Field(None)
@@ -40,7 +40,7 @@ class AiTranslationOutputCreate(BaseModel):
 
 class AiTranslationOutputUpdate(BaseModel):
     id: int
-    crawler_data_id: int
+    crawled_data_id: int
     language: str = Field("")
     content: str = Field("")
     metadata: dict | None = Field(None)

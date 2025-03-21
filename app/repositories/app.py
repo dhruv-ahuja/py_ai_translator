@@ -5,9 +5,9 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import DeclarativeBase
 
-from app.config.models import CrawlerData, AiTranslationOutput
+from app.config.models import CrawledData, AiTranslationOutput
 from app.config.db import AsyncSession
-from app.schemas.app import CrawlerDataCreate, CrawlerDataUpdate, AiTranslationOutputCreate, AiTranslationOutputUpdate
+from app.schemas.app import CrawledDataCreate, CrawledDataUpdate, AiTranslationOutputCreate, AiTranslationOutputUpdate
 
 
 ModelType = TypeVar("ModelType", bound=DeclarativeBase)
@@ -100,8 +100,8 @@ class AppRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return await self.get_by_filter(session, **filters) is not None
 
 
-class CrawlerDataRepository(AppRepository[CrawlerData, CrawlerDataCreate, CrawlerDataUpdate]):
-    model = CrawlerData
+class CrawledDataRepository(AppRepository[CrawledData, CrawledDataCreate, CrawledDataUpdate]):
+    model = CrawledData
 
 
 class AiTranslationOutputRepository(

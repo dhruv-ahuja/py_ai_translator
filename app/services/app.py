@@ -1,10 +1,10 @@
 from pathlib import Path
 from app.config.app_settings import settings
-from app.schemas.app import CrawlerDataCreate, AiTranslationOutputCreate
+from app.schemas.app import CrawledDataCreate, AiTranslationOutputCreate
 from app.utils.crawler import crawl_url
 from app.config.logger import logger
-from app.repositories.app import CrawlerDataRepository, AiTranslationOutputRepository
-from app.config.models import CrawlerData
+from app.repositories.app import CrawledDataRepository, AiTranslationOutputRepository
+from app.config.models import CrawledData
 from app.config.db import AsyncSession, get_async_session
 from app.utils.ai import get_agent_prompt, create_agent
 
@@ -12,7 +12,7 @@ from app.utils.ai import get_agent_prompt, create_agent
 S = AsyncSession
 
 
-async def crawl_single_url(url: str, cache: bool = True) -> CrawlerData | None:
+async def crawl_single_url(url: str, cache: bool = True) -> CrawledData | None:
     """Crawls a URL and saves its content and metadata to the database."""
     result = await crawl_url(url, cache)
     if not result:
@@ -21,23 +21,23 @@ async def crawl_single_url(url: str, cache: bool = True) -> CrawlerData | None:
     if not content:
         return None
 
-    repository = CrawlerDataRepository()
+    repository = CrawledDataRepository()
     content = content.fit_markdown if content.fit_markdown else content
 
     logger.debug("Extracted markdown content from URL\n", url=url, content=str(content))
     logger.debug("Crawled URL metadata", url=url, metadata=result.metadata)
 
     async with get_async_session() as session:
-        crawled_data = CrawlerDataCreate(url=url, content=content, metadata=result.metadata)
+        crawled_data = CrawledDataCreate(url=url, content=content, metadata=result.metadata)
         crawled_data_record = await repository.add(crawled_data, session)
 
     async with get_async_session() as session:
         count = await repository.count(session)
-        logger.info("number of crawler data records", count=count)
+        logger.info("number of crawled data records", count=count)
     return crawled_data_record
 
 
-async def translate_content(crawled_data: CrawlerData, language: str = "Spanish") -> str:
+async def translate_content(crawled_data: CrawledData, language: str = "Spanish") -> str:
     prompt = get_agent_prompt(crawled_data.content, language)
     agent = create_agent(system_prompt=prompt)
     result = await agent.run(prompt)
@@ -63,7 +63,7 @@ async def save_translated_content(
 
     repository = AiTranslationOutputRepository()
     async with get_async_session() as session:
-        translated_data = AiTranslationOutputCreate(crawler_data_id=crawled_data_id, language=language, content=content)
+        translated_data = AiTranslationOutputCreate(crawled_data_id=crawled_data_id, language=language, content=content)
         await repository.add(translated_data, session)
 
     logger.debug("Translated content saved successfully", output_file_path=output_file_path)
