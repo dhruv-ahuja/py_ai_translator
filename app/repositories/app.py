@@ -23,7 +23,7 @@ class AppRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     model: ClassVar[ModelType]
 
     def __init__(self):
-        # this runtime check ensures no one can instantiate the abstract class
+        # ensure repository can only be used with a valid DB model type
         if not issubclass(self.model, ModelType.__bound__):
             raise ValueError(
                 f"{self.__class__.__name__}'s `model` attribute must be a subclass of {ModelType.__name__}, got {type(self.model)}"
@@ -78,7 +78,6 @@ class AppRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             return False
 
         await session.delete(db_record)
-        await session.commit()
         return True
 
     async def delete_by_filter(self, session: S, **filters) -> bool:
@@ -87,7 +86,6 @@ class AppRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             return False
 
         await session.delete(db_record)
-        await session.commit()
         return True
 
     async def count(self, session: S, **filters) -> int:

@@ -19,13 +19,13 @@ browser_config = BrowserConfig(
 config = CrawlerRunConfig(
     user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.5195.52 Safari/537.36",
     word_count_threshold=10,  # Minimum words per content block
-    exclude_external_links=True,  # Remove external links
+    exclude_external_links=False,
     remove_overlay_elements=True,  # Remove popups/modals
     excluded_tags=["form", "header"],
     # Cache control
     cache_mode=CacheMode.ENABLED,
     markdown_generator=DefaultMarkdownGenerator(
-        content_filter=PruningContentFilter(threshold=0.6), options={"ignore_links": True}
+        content_filter=PruningContentFilter(threshold=0.6), options={"ignore_links": False}
     ),
 )
 
