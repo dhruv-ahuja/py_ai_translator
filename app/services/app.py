@@ -15,6 +15,7 @@ S = AsyncSession
 
 async def crawl_single_url(url: str, cache: bool = True) -> CrawledData | None:
     """Crawls a URL and saves its content and metadata to the database."""
+
     result = await crawl_url(url, cache)
     if not result:
         return None
@@ -45,7 +46,8 @@ async def translate_content(crawled_data: CrawledData, language: str = "Spanish"
 
 async def save_translated_content(
     crawled_data_id: int, file_name: str, content: str, language: str = "Spanish", save_to_disk: bool = True
-) -> None:
+) -> Path | None:
+    output_file_path = None
     if save_to_disk:
         output_folder = Path(settings.general.output_folder)
         output_folder.mkdir(parents=True, exist_ok=True)
@@ -65,3 +67,4 @@ async def save_translated_content(
         await repository.add(translated_data, session)
 
     logger.debug("Translated content saved successfully", output_file_path=output_file_path)
+    return output_file_path

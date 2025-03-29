@@ -8,7 +8,7 @@ import logfire
 from app.config.logger import logger
 from app.services.app import crawl_single_url, translate_content, save_translated_content
 from app.config.app_settings import settings
-from app.api import feed
+from app.api import feed, app as app_api
 
 
 # TODO: move this and future instrumentation logic to config module
@@ -21,7 +21,7 @@ if settings.logfire.enable:
     time.sleep(2)
 
 
-async def sample_conversion():
+async def translate():
     url = input("Enter URL to crawl: ").strip()
     name = input("Enter name for output file (leave empty for page title): ").strip()
     caching = input("Enable caching? (Y/n): ").strip().lower()
@@ -33,7 +33,7 @@ async def sample_conversion():
         return
 
     # generate name if not explicitly passed
-    name = name if name else crawled_data.name
+    name = name if name else crawled_data.title
     translated_content = await translate_content(crawled_data)
     await save_translated_content(crawled_data.id, name, translated_content)
     logger.info("Translation completed successfully", url=url, name=name)
@@ -41,6 +41,19 @@ async def sample_conversion():
 
 app = FastAPI(default_response_class=ORJSONResponse)
 app.include_router(feed.router)
+app.include_router(app_api.router)
+
+
+@app.exception_handler(500)
+async def internal_server_error(request, exc: Exception):
+    """generic 500 error handler"""
+    logger.exception(
+        "Internal Server Error", path=request.url.path, method=request.method, body=request.body, exc_info=exc
+    )
+    return ORJSONResponse(
+        status_code=500,
+        content={"detail": "Unexpected error occurred"},
+    )
 
 
 @app.get("/")
@@ -49,4 +62,4 @@ def healthcheck():
 
 
 if __name__ == "__main__":
-    asyncio.run(sample_conversion())
+    asyncio.run(translate())

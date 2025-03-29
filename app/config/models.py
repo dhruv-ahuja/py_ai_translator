@@ -39,7 +39,7 @@ class CrawledData(Base):
         return "crawled_metadata"
 
     @property
-    def name(self) -> str:
+    def title(self) -> str:
         formatted_url = self.url.replace("https://", "").replace("www.", "")
         metadata = self.crawled_metadata
         if metadata is None:
