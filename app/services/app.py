@@ -13,6 +13,14 @@ from app.utils.crawler import crawl_url
 S = AsyncSession
 
 
+async def get_crawled_data_by_url(url: str, session: S) -> CrawledData | None:
+    """Get crawled data for the given URL, if it exists and is not older than the specified number of days."""
+
+    repository = CrawledDataRepository()
+    filters = {"url": url}
+    return await repository.get_by_filter(session, **filters)
+
+
 async def crawl_single_url(url: str, cache: bool = True) -> CrawledData | None:
     """Crawls a URL and saves its content and metadata to the database."""
 

@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends
 from loguru import logger
 
 from app.config.db import AsyncSession, get_async_session_dependency
+from app.config.models import AiTranslationOutput
 from app.schemas.app import TranslateRequestInput, TranslateResponse
-from app.services.app import crawl_single_url, translate_content, save_translated_content
+from app.services.app import crawl_single_url, translate_content, save_translated_content, get_crawled_data_by_url
 
 router = APIRouter(prefix="/app")
 
@@ -11,17 +12,36 @@ router = APIRouter(prefix="/app")
 @router.post("/translate")
 async def translate(
     req_input: TranslateRequestInput, async_session: AsyncSession = Depends(get_async_session_dependency)
-) -> TranslateResponse:
+) -> TranslateResponse | None:
     """Translates content from a URL to a target language."""
 
     logger.debug("received translate request", input=req_input)
     url = req_input.url
     language = req_input.language
 
-    crawled_data = await crawl_single_url(url, cache=req_input.cache)
+    crawled_data = await get_crawled_data_by_url(url, async_session)
+    if not crawled_data:
+        crawled_data = await crawl_single_url(url, cache=req_input.cache)
+    else:
+        logger.info("found existing crawled data", id=crawled_data.id, url=url)
+
     if not crawled_data or not crawled_data.content:
         logger.error("No content found for URL", url=url)
         return TranslateResponse(success=False, error={"message": "No content found for the given URL"}, data=None)
+
+    translation_output: AiTranslationOutput | None = await crawled_data.awaitable_attrs.translation_output
+    if translation_output:
+        logger.info("Found existing translation output", id=translation_output.id, url=url)
+        translated_content = translation_output.content
+        return TranslateResponse(
+            success=True,
+            error=None,
+            data={
+                "translation_id": crawled_data.id,
+                "content": translated_content,
+                "metadata": {"output_file_path": None, "crawled_metadata": crawled_data.crawled_metadata},
+            },
+        )
 
     translated_content = await translate_content(crawled_data, language)
     if not translated_content:
@@ -46,7 +66,7 @@ async def translate(
         error=None,
         data={
             "translation_id": crawled_data.id,
-            "content": translated_content,
             "metadata": {"output_file_path": output_file_path, "crawled_metadata": crawled_data.crawled_metadata},
+            "content": translated_content,
         },
     )

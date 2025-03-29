@@ -2,12 +2,13 @@ import datetime as dt
 
 from sqlalchemy import ForeignKey, Integer, String, DateTime, func
 from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.dialects.postgresql import JSONB
 
 
-class Base(DeclarativeBase):
+class Base(AsyncAttrs, DeclarativeBase):
     pass
 
 
@@ -15,7 +16,7 @@ class CrawledData(Base):
     __tablename__ = "crawled_data"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    url: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    url: Mapped[str] = mapped_column(String(255), nullable=False, index=True, unique=True)
     content: Mapped[str | None] = mapped_column(String, nullable=False, default="")
     # attribute name 'metadata' is reserved by sqlalchemy
     crawled_metadata: Mapped[dict | None] = mapped_column(JSONB, name="metadata", nullable=True)

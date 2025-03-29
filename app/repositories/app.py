@@ -33,7 +33,20 @@ class AppRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return await session.get(self.model, id)
 
     async def get_by_filter(self, session: S, **filters) -> ModelType | None:
-        query = select(self.model).filter_by(**filters)
+        query = select(self.model)
+        for field, value in filters.items():
+            if field.endswith("__gt") or field.endswith("__gte"):
+                column_name = field.split("__")[0]
+                column = getattr(self.model, column_name)
+                query = query.filter(column > value)
+            elif field.endswith("__lt") or field.endswith("__lte"):
+                column_name = field.split("__")[0]
+                column = getattr(self.model, column_name)
+                query = query.filter(column < value)
+            else:
+                column = getattr(self.model, field)
+                query = query.filter(column == value)
+
         result = await session.execute(query)
         return result.scalar_one_or_none()
 

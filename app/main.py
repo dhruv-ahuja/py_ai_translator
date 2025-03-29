@@ -47,9 +47,7 @@ app.include_router(app_api.router)
 @app.exception_handler(500)
 async def internal_server_error(request, exc: Exception):
     """generic 500 error handler"""
-    logger.exception(
-        "Internal Server Error", path=request.url.path, method=request.method, body=request.body, exc_info=exc
-    )
+    logger.error("Internal Server Error", path=request.url.path, method=request.method, body=request.body, exc_info=exc)
     return ORJSONResponse(
         status_code=500,
         content={"detail": "Unexpected error occurred"},
