@@ -3,7 +3,7 @@ from pathlib import Path
 from app.config.app_settings import settings
 from app.config.db import AsyncSession, get_async_session
 from app.config.logger import logger
-from app.config.models import CrawledData
+from app.config.models import AiTranslationOutput, CrawledData
 from app.repositories.app import AiTranslationOutputRepository, CrawledDataRepository
 from app.schemas.app import AiTranslationOutputCreate, CrawledDataCreate
 from app.utils.ai import create_agent, get_agent_prompt
@@ -59,7 +59,7 @@ async def translate_content(crawled_data: CrawledData, language: str = "Spanish"
 
 async def save_translated_content(
     crawled_data_id: int, file_name: str, content: str, language: str = "Spanish", save_to_disk: bool = True
-) -> Path | None:
+) -> tuple[AiTranslationOutput, Path | None]:
     output_file_path = None
     if save_to_disk:
         output_folder = Path(settings.general.output_folder)
@@ -82,7 +82,7 @@ async def save_translated_content(
             content=content,
             metadata={"output_file_path": str(output_file_path)},
         )
-        await repository.add(translated_data, session)
+        translation_output = await repository.add(translated_data, session)
 
     logger.debug("Translated content saved successfully", output_file_path=output_file_path)
-    return output_file_path
+    return translation_output, output_file_path

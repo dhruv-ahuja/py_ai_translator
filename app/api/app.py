@@ -37,7 +37,7 @@ async def get_translation(
         success=True,
         error=None,
         data={
-            "translation_id": translation_output.id,
+            "crawled_data_id": crawled_data.id,
             "content": translation_output.content,
             "metadata": {
                 "translation_metadata": translation_output.ai_metadata,
@@ -79,7 +79,7 @@ async def translate(
                 success=True,
                 error=None,
                 data={
-                    "translation_id": crawled_data.id,
+                    "crawled_data_id": crawled_data.id,
                     "content": translated_content,
                     "metadata": {
                         "translation_metadata": translation_output.ai_metadata,
@@ -96,7 +96,7 @@ async def translate(
         return TranslateResponse(success=False, error={"message": "Unable to translate for the given URL."}, data=None)
 
     title = req_input.title if req_input.title else crawled_data.title
-    output_file_path = await save_translated_content(
+    translation_output, output_file_path = await save_translated_content(
         crawled_data.id, title, translated_content, language, save_to_disk=req_input.save_to_disk
     )
     logger.info(
@@ -110,7 +110,7 @@ async def translate(
         success=True,
         error=None,
         data={
-            "translation_id": crawled_data.id,
+            "crawled_data_id": crawled_data.id,
             "metadata": {
                 "translation_metadata": translation_output.ai_metadata,
                 "crawled_metadata": crawled_data.crawled_metadata,

@@ -27,6 +27,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 RUN chmod +x /app/entrypoint.sh
 
+# TODO: optimize this step
 RUN uv run crawl4ai-setup
 
 ENTRYPOINT ["/app/entrypoint.sh"]

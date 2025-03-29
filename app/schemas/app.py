@@ -63,7 +63,7 @@ class TranslateRequestInput(BaseModel):
 
 # NOTE: Experimental kinda "pattern", also avoiding creating more modules than needed right now
 class _TranslateResponseData(TypedDict):
-    translation_id: int | None
+    crawled_data_id: int | None
     content: str
     metadata: dict | None = Field(None)
 
