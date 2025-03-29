@@ -33,6 +33,8 @@ async def sample_conversion():
         logger.error("No content found for URL, exiting...", url=url)
         return
 
+    # generate name if not explicitly passed
+    name = name if name else crawled_data.name
     translated_content = await translate_content(crawled_data)
     await save_translated_content(crawled_data.id, name, translated_content)
     logger.info("Translation completed successfully", url=url, name=name)

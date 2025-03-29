@@ -38,6 +38,25 @@ class CrawledData(Base):
     def metadata_column(self) -> str:
         return "crawled_metadata"
 
+    @property
+    def name(self) -> str:
+        formatted_url = self.url.replace("https://", "").replace("www.", "")
+        metadata = self.crawled_metadata
+        if metadata is None:
+            return formatted_url
+
+        # opengraph titles are better as they are meant for social media and are concise
+        # shorten the given title if it is too long
+        opengraph_title = metadata.get("og:title")
+        given_title = metadata.get("title")
+        given_title = (given_title[:50] + "..." if len(given_title) > 50 else given_title) if given_title else None
+
+        # use opengraph title if available, otherwise use given title, falling back to formatted url if
+        # no title is available
+        title = opengraph_title if opengraph_title else given_title
+        title = title if title else formatted_url
+        return title
+
 
 class AiTranslationOutput(Base):
     __tablename__ = "ai_translation_output_data"

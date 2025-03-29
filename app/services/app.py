@@ -32,9 +32,6 @@ async def crawl_single_url(url: str, cache: bool = True) -> CrawledData | None:
         crawled_data = CrawledDataCreate(url=url, content=content, metadata=result.metadata)
         crawled_data_record = await repository.add(crawled_data, session)
 
-    async with get_async_session() as session:
-        count = await repository.count(session)
-        logger.info("number of crawled data records", count=count)
     return crawled_data_record
 
 
