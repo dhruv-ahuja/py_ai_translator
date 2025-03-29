@@ -1,18 +1,53 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 
 from app.config.db import AsyncSession, get_async_session_dependency
 from app.config.models import AiTranslationOutput
 from app.schemas.app import TranslateRequestInput, TranslateResponse
-from app.services.app import crawl_single_url, translate_content, save_translated_content, get_crawled_data_by_url
+from app.services.app import (
+    crawl_single_url,
+    translate_content,
+    save_translated_content,
+    get_crawled_data_by_url,
+    get_crawled_data,
+)
 
 router = APIRouter(prefix="/app")
+
+
+@router.get("/translate")
+async def get_translation(
+    id: int, async_session: AsyncSession = Depends(get_async_session_dependency)
+) -> TranslateResponse:
+    crawled_data = await get_crawled_data(id, async_session)
+    if not crawled_data:
+        raise HTTPException(
+            status_code=404,
+            detail="Crawled data not found",
+        )
+
+    translation_output = await crawled_data.awaitable_attrs.translation_output
+    if not translation_output:
+        raise HTTPException(
+            status_code=404,
+            detail="Translation output not found",
+        )
+
+    return TranslateResponse(
+        success=True,
+        error=None,
+        data={
+            "translation_id": translation_output.id,
+            "content": translation_output.content,
+            "metadata": {"output_file_path": None, "crawled_metadata": crawled_data.crawled_metadata},
+        },
+    )
 
 
 @router.post("/translate")
 async def translate(
     req_input: TranslateRequestInput, async_session: AsyncSession = Depends(get_async_session_dependency)
-) -> TranslateResponse | None:
+) -> TranslateResponse:
     """Translates content from a URL to a target language."""
 
     logger.debug("received translate request", input=req_input)
@@ -43,7 +78,10 @@ async def translate(
                 data={
                     "translation_id": crawled_data.id,
                     "content": translated_content,
-                    "metadata": {"output_file_path": None, "crawled_metadata": crawled_data.crawled_metadata},
+                    "metadata": {
+                        "translation_metadata": translation_output.ai_metadata,
+                        "crawled_metadata": crawled_data.crawled_metadata,
+                    },
                 },
             )
 
@@ -70,7 +108,10 @@ async def translate(
         error=None,
         data={
             "translation_id": crawled_data.id,
-            "metadata": {"output_file_path": output_file_path, "crawled_metadata": crawled_data.crawled_metadata},
+            "metadata": {
+                "translation_metadata": translation_output.ai_metadata,
+                "crawled_metadata": crawled_data.crawled_metadata,
+            },
             "content": translated_content,
         },
     )

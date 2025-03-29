@@ -13,6 +13,11 @@ from app.utils.crawler import crawl_url
 S = AsyncSession
 
 
+async def get_crawled_data(id: int, session: S) -> CrawledData | None:
+    repository = CrawledDataRepository()
+    return await repository.get(id, session)
+
+
 async def get_crawled_data_by_url(url: str, session: S) -> CrawledData | None:
     """Get crawled data for the given URL, if it exists and is not older than the specified number of days."""
 
@@ -71,7 +76,12 @@ async def save_translated_content(
 
     repository = AiTranslationOutputRepository()
     async with get_async_session() as session:
-        translated_data = AiTranslationOutputCreate(crawled_data_id=crawled_data_id, language=language, content=content)
+        translated_data = AiTranslationOutputCreate(
+            crawled_data_id=crawled_data_id,
+            language=language,
+            content=content,
+            metadata={"output_file_path": output_file_path},
+        )
         await repository.add(translated_data, session)
 
     logger.debug("Translated content saved successfully", output_file_path=output_file_path)
