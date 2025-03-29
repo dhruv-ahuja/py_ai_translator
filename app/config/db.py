@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from typing import Generator
+from typing import AsyncGenerator
 from sqlalchemy import text, CursorResult
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
@@ -28,7 +28,7 @@ AsyncSessionLocal = sessionmaker(
 
 
 @asynccontextmanager
-async def get_async_session(auto_commit: bool = True) -> Generator[AsyncSession, None, None]:
+async def get_async_session(auto_commit: bool = True) -> AsyncGenerator[AsyncSession]:
     async with AsyncSessionLocal() as session:
         session: AsyncSession
         try:
@@ -41,6 +41,11 @@ async def get_async_session(auto_commit: bool = True) -> Generator[AsyncSession,
             raise
         finally:
             await session.close()
+
+
+async def get_async_session_dependency(auto_commit: bool = True) -> AsyncGenerator[AsyncSession]:
+    async with get_async_session(auto_commit=auto_commit) as session:
+        yield session  # Ensures the session is properly managed
 
 
 async def test_db_connection():

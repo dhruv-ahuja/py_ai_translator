@@ -1,12 +1,13 @@
 from pathlib import Path
+
 from app.config.app_settings import settings
-from app.schemas.app import CrawledDataCreate, AiTranslationOutputCreate
-from app.utils.crawler import crawl_url
-from app.config.logger import logger
-from app.repositories.app import CrawledDataRepository, AiTranslationOutputRepository
-from app.config.models import CrawledData
 from app.config.db import AsyncSession, get_async_session
-from app.utils.ai import get_agent_prompt, create_agent
+from app.config.logger import logger
+from app.config.models import CrawledData
+from app.repositories.app import AiTranslationOutputRepository, CrawledDataRepository
+from app.schemas.app import AiTranslationOutputCreate, CrawledDataCreate
+from app.utils.ai import create_agent, get_agent_prompt
+from app.utils.crawler import crawl_url
 
 
 S = AsyncSession

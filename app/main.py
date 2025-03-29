@@ -1,11 +1,14 @@
 import asyncio
 import time
 
+from fastapi import FastAPI
+from fastapi.responses import ORJSONResponse
 import logfire
 
 from app.config.logger import logger
 from app.services.app import crawl_single_url, translate_content, save_translated_content
 from app.config.app_settings import settings
+from app.api import feed
 
 
 # TODO: move this and future instrumentation logic to config module
@@ -35,7 +38,13 @@ async def sample_conversion():
     logger.info("Translation completed successfully", url=url, name=name)
 
 
-# TODO: export as RSS feed
+app = FastAPI(default_response_class=ORJSONResponse)
+app.include_router(feed.router)
+
+
+@app.get("/")
+def healthcheck():
+    return {"status": "ok"}
 
 
 if __name__ == "__main__":
