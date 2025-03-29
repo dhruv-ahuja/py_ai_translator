@@ -25,7 +25,6 @@ async def sample_conversion():
     url = input("Enter URL to crawl: ").strip()
     name = input("Enter name for output file (leave empty for page title): ").strip()
     caching = input("Enable caching? (Y/n): ").strip().lower()
-    caching = False
     cache = True if caching == "" or caching == "y" else False
 
     crawled_data = await crawl_single_url(url, cache)
