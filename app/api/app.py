@@ -39,7 +39,10 @@ async def get_translation(
         data={
             "translation_id": translation_output.id,
             "content": translation_output.content,
-            "metadata": {"output_file_path": None, "crawled_metadata": crawled_data.crawled_metadata},
+            "metadata": {
+                "translation_metadata": translation_output.ai_metadata,
+                "crawled_metadata": crawled_data.crawled_metadata,
+            },
         },
     )
 
