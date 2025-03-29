@@ -80,7 +80,7 @@ async def save_translated_content(
             crawled_data_id=crawled_data_id,
             language=language,
             content=content,
-            metadata={"output_file_path": output_file_path},
+            metadata={"output_file_path": str(output_file_path)},
         )
         await repository.add(translated_data, session)
 
