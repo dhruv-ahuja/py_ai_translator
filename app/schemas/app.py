@@ -1,4 +1,4 @@
-from typing import Annotated, Generic, TypeVar, TypedDict
+from typing import Annotated, TypedDict
 from pydantic import AfterValidator, AnyHttpUrl, BaseModel, Field
 
 
