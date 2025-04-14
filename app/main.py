@@ -21,11 +21,9 @@ if settings.logfire.enable:
     time.sleep(2)
 
 
-async def translate():
-    url = input("Enter URL to crawl: ").strip()
-    name = input("Enter name for output file (leave empty for page title): ").strip()
-    caching = input("Enable caching? (Y/n): ").strip().lower()
-    cache = True if caching == "" or caching == "y" else False
+async def translate(url, name, cache):
+    url = url.strip()
+    name = name.strip()
 
     crawled_data = await crawl_single_url(url, cache)
     if not crawled_data or not crawled_data.content:
@@ -39,6 +37,7 @@ async def translate():
     logger.info("Translation completed successfully", url=url, name=name)
 
 
+# TODO: clean up the main module
 app = FastAPI(default_response_class=ORJSONResponse)
 app.include_router(feed.router)
 app.include_router(app_api.router)
@@ -60,4 +59,12 @@ def healthcheck():
 
 
 if __name__ == "__main__":
-    asyncio.run(translate())
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("url", type=str, help="URL to crawl")
+    parser.add_argument("--name", type=str, help="Name for output file (leave empty for page title)", default="")
+    parser.add_argument("--cache", action="store_true", help="Enable caching")
+
+    args = parser.parse_args()
+    asyncio.run(translate(args.url, args.name, args.cache))
