@@ -45,8 +45,8 @@ async def crawl_single_url(url: str, session: S, cache: bool = True) -> CrawledD
     crawled_data = CrawledDataCreate(url=url, content=content, metadata=result.metadata)
     crawled_data_record = await repository.add(crawled_data, session)
 
-    session.flush()
-    session.refresh(crawled_data_record)
+    await session.flush()
+    await session.refresh(crawled_data_record)
 
     return crawled_data_record
 
