@@ -5,8 +5,9 @@ from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 import logfire
 
+from app.config.db import get_async_session
 from app.config.logger import logger
-from app.services.app import crawl_single_url, translate_content, save_translated_content
+from app.services.app import save_translated_content, get_or_crawl_url, get_or_translate_content
 from app.config.app_settings import settings
 from app.api import feed, app as app_api
 
@@ -21,20 +22,19 @@ if settings.logfire.enable:
     time.sleep(2)
 
 
-async def translate(url, name, cache):
-    url = url.strip()
-    name = name.strip()
+async def translate(url: str, name: str = "", cache: bool = True):
+    """CLI translation handler using common service logic"""
+    try:
+        async with get_async_session() as session:
+            crawled_data, _ = await get_or_crawl_url(url, session, cache)
+            translated_content = await get_or_translate_content(crawled_data, session)
 
-    crawled_data = await crawl_single_url(url, cache)
-    if not crawled_data or not crawled_data.content:
-        logger.error("No content found for URL, exiting...", url=url)
-        return
-
-    # generate name if not explicitly passed
-    name = name if name else crawled_data.title
-    translated_content = await translate_content(crawled_data)
-    await save_translated_content(crawled_data.id, name, translated_content)
-    logger.info("Translation completed successfully", url=url, name=name)
+            name = name if name else crawled_data.title
+            await save_translated_content(crawled_data.id, name, translated_content)
+            logger.info("Translation completed", url=url)
+    except ValueError as exc:
+        logger.error("Translation failed", url=url, error=str(exc))
+        raise
 
 
 # TODO: clean up the main module

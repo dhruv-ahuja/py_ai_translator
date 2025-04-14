@@ -26,7 +26,7 @@ async def get_crawled_data_by_url(url: str, session: S) -> CrawledData | None:
     return await repository.get_by_filter(session, **filters)
 
 
-async def crawl_single_url(url: str, cache: bool = True) -> CrawledData | None:
+async def crawl_single_url(url: str, session: S, cache: bool = True) -> CrawledData | None:
     """Crawls a URL and saves its content and metadata to the database."""
 
     result = await crawl_url(url, cache)
@@ -42,9 +42,11 @@ async def crawl_single_url(url: str, cache: bool = True) -> CrawledData | None:
     logger.debug("Extracted markdown content from URL\n", url=url, content=str(content))
     logger.debug("Crawled URL metadata", url=url, metadata=result.metadata)
 
-    async with get_async_session() as session:
-        crawled_data = CrawledDataCreate(url=url, content=content, metadata=result.metadata)
-        crawled_data_record = await repository.add(crawled_data, session)
+    crawled_data = CrawledDataCreate(url=url, content=content, metadata=result.metadata)
+    crawled_data_record = await repository.add(crawled_data, session)
+
+    session.flush()
+    session.refresh(crawled_data_record)
 
     return crawled_data_record
 
@@ -55,6 +57,42 @@ async def translate_content(crawled_data: CrawledData, language: str = "Spanish"
     result = await agent.run(prompt)
     logger.debug("Usage stats for agent", usage=result.usage())
     return result.data
+
+
+async def get_or_crawl_url(
+    url: str,
+    session: S,
+    cache: bool = True,
+) -> tuple[CrawledData, bool]:
+    """Get existing crawled data or crawl fresh if not found.
+    Returns tuple of (crawled_data, is_fresh_crawl)"""
+
+    # Check for existing crawled data
+    crawled_data = await get_crawled_data_by_url(url, session)
+    if crawled_data:
+        logger.info("Found existing crawled data", id=crawled_data.id, url=url)
+        return crawled_data, False
+
+    # If not found, crawl fresh
+    crawled_data = await crawl_single_url(url, session, cache)
+    if not crawled_data:
+        raise ValueError(f"Failed to crawl URL: {url}")
+
+    await session.commit()
+    return crawled_data, True
+
+
+async def get_or_translate_content(crawled_data: CrawledData, session: S, language: str = "Spanish") -> str:
+    """Get existing translation or translate fresh if not found."""
+
+    await session.refresh(crawled_data)
+
+    translation_output = await crawled_data.awaitable_attrs.translation_output
+    if not translation_output:
+        return await translate_content(crawled_data, language)
+
+    logger.info("Found existing translation", id=translation_output.id)
+    return translation_output.content
 
 
 async def save_translated_content(
