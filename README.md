@@ -16,9 +16,9 @@ Built with Python 3.13, FastAPI, and SQLAlchemy, it's perfect for:
 - Experimenting with AI-powered translation
 
 It utilizes Google's Gemini Flash Lite 001 model, ensuring quality and speed for AI translations without burning a hole in the pocket.
-It works well for small and medium documents and can become erratic for large documents.
+It works well for small and medium documents and can become erratic for documents with lot of other elements and content (say, a news site article).
 
-Will add support for other models down the line.
+Will add support for other models down the line based on requirements, most likely a better Gemini model will be the best for this use case.
 
 ## Setup
 
@@ -59,7 +59,7 @@ The API server will be accessible at `http://localhost:8002`, with API docs at `
 To run the app in CLI mode:
 
 ```bash
-docker run --env-file .env.deploy --network app-network --rm dhruvahuja/py_ai_translator_cli 'https://www.example.com'
+docker run --env-file .env.deploy --network app-network --rm dhruvahuja/py_ai_translator_cli -v ~/docker_data/markdown:/app/markdown 'https://www.example.com'
 ```
 
 To run the app server:
